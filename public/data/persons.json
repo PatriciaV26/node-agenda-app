@@ -1,12 +1,17 @@
-[ 
-    {
-        "firstName": "Andreea",
-        "lastName": "Luca",
-        "phone": "0712 039 273"
-    },
-    {
-        "firstName": "Paula",
-        "lastName": "Deac",
-        "phone": "0735 465 263"
-    }
+[
+  {
+    "firstName": "Andreea",
+    "lastName": "Luca",
+    "phone": "0712 039 273"
+  },
+  {
+    "firstName": "Paula",
+    "lastName": "Deac",
+    "phone": "0735 465 263"
+  },
+  {
+    "firstName": "Maria",
+    "lastName": "Pop",
+    "phone": "0765 123 432"
+  }
 ]
