@@ -2,11 +2,13 @@ var allPersons = [];
 
 var API_URL = {
     //ADD: 'data/add.json'
-    ADD: 'users/add'
+    ADD: 'users/add',
+    DELETE: 'users/delete'
 };
 var API_METHOD = {
     //ADD: 'GET'
-    ADD: 'POST'
+    ADD: 'POST',
+    DELETE: 'DELETE'
 }
 
 fetch('data/persons.json').then(function (r) {
@@ -18,7 +20,15 @@ fetch('data/persons.json').then(function (r) {
 
 function display(persons) {
     var list = persons.map(function (a) {
-        return `<tr><td>${a.firstName}</td><td>${a.lastName}</td><td>${a.phone}</td><td></td></tr>`;
+        return `<tr data-id="${a.id}">
+        <td>${a.firstName}</td>
+        <td>${a.lastName}</td>
+        <td>${a.phone}</td>
+        <td>
+            <a href="#" class="delete">&#10006;</a>
+            <a href="#" class="edit">&#9998;</a>
+        </td>
+    </tr>`;
     });
     document.querySelector('#agenda tbody').innerHTML = list.join("");
 
@@ -54,18 +64,63 @@ function submitNewPerson(firstName, lastName, phone) {
         return r.json();
     }).then(function (status) {
         if (status.success) {
-            inlineAddPerson(firstName, lastName, phone);
+            inlineAddPerson(status.id, firstName, lastName, phone);
         } else {
             console.warn('not saved', status);
         }
     })
 }
     
-function inlineAddPerson(firstName, lastName, phone) {
+function inlineAddPerson(id, firstName, lastName, phone) {
     allPersons.push({
-        firstName: firstName,
-        lastName: lastName,
-        phone: phone
+        id,
+        firstName,
+        lastName,
+        phone
     });
     display(allPersons);
 }
+
+function inlineDeletePerson(id) {
+    console.warn('please refresh :', id);
+    allPersons = allPersons.filter(function(person) {
+        return person.id != id;
+    });
+    display(allPersons);
+}
+
+function deletePerson(id) {
+    var body = null;
+    if (API_METHOD.DELETE === 'DELETE') {
+        body = JSON.stringify({id});
+    }
+    fetch(API_URL.DELETE, {
+        method: API_METHOD.DELETE,
+        body: body,
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }).then(function (r) {
+        return r.json();
+    }).then(function (status) {
+        if (status.success) {
+            inlineDeletePerson(id);
+        } else {
+            console.warn('not removed', status);
+        }
+    });
+}
+
+function initEvents() {
+    const tbody = document.querySelector('#agenda tbody');
+    tbody.addEventListener('click', function(e) {
+        if (e.target.className == 'delete') {
+            const tr = e.target.parentNode.parentNode; //pentru a gasi tr-ul la care apartine x-ul
+            const id = tr.getAttribute('data-id');
+            console.warn('parent', id); 
+            deletePerson(id);
+        }
+    });
+}
+
+initEvents();

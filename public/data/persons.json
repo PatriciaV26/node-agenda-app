@@ -1,17 +1,20 @@
 [
   {
+    "id": 1,
     "firstName": "Andreea",
     "lastName": "Luca",
-    "phone": "0712 039 273"
+    "phone": "0123 039 273"
   },
   {
+    "id": 2,
     "firstName": "Paula",
     "lastName": "Deac",
-    "phone": "0735 465 263"
+    "phone": "0123 465 263"
   },
   {
+    "id": 3,
     "firstName": "Maria",
     "lastName": "Pop",
-    "phone": "0765 123 432"
+    "phone": "0123 123 432"
   }
 ]
