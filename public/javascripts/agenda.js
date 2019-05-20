@@ -180,6 +180,16 @@ const editPerson = function(id) {
     editPersonId = id;
 }
 
+const search = value => {
+    value = value.toLowerCase();
+    const filtered = allPersons.filter(person => {
+        return person.firstName.toLowerCase().includes(value) || 
+        person.lastName.toLowerCase().includes(value) || 
+        person.phone.includes(value);
+    });
+    display(filtered);
+};
+
 function initEvents() {
     const tbody = document.querySelector('#agenda tbody');
     tbody.addEventListener('click', function(e) {
@@ -194,6 +204,10 @@ function initEvents() {
             editPerson(id);
         }
     });
+    const searchInput = document.getElementById('search');
+    searchInput.addEventListener('input', (e) => {
+        search(e.target.value);
+    })
 }
 
 initEvents();
