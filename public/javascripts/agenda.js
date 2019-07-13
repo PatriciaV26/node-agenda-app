@@ -1,11 +1,10 @@
-var allPersons = [];
 var editPersonId;
 
 var API_URL = {
-    CREATE: '..',
-    READ: '..',
+    CREATE: '...',
+    READ: 'users', // 'data/persons.json'
     //ADD: 'data/add.json'
-    ADD: 'users/add', //TODO use CREATE
+    ADD: 'users/add', // TODO use CREATE
     UPDATE: 'users/update',
     DELETE: 'users/delete'
 };
@@ -13,54 +12,81 @@ var API_METHOD = {
     CREATE: 'POST',
     READ: 'GET',
     //ADD: 'GET'
-    ADD: 'POST', //TODO use CREATE
+    ADD: 'POST', // TODO use CREATE
     UPDATE: 'PUT',
     DELETE: 'DELETE'
-
 }
 
-fetch('data/persons.json').then(function (r) {
-    return r.json();
-}).then(function (persons) {
-    allPersons = persons;
-    display(persons);
-})
+const Persons = {
+    list: [],
 
-function display(persons) {
-    var list = persons.map(function (a) {
-        return `<tr data-id="${a.id}">
-        <td>${a.firstName}</td>
-        <td>${a.lastName}</td>
-        <td>${a.phone}</td>
-        <td>
-            <a href="#" class="delete">&#10006;</a>
-            <a href="#" class="edit">&#9998;</a>
-        </td>
-    </tr>`;
-    });
-    document.querySelector('#agenda tbody').innerHTML = list.join("");
+    display: function(persons){
+        var list = persons.map(function(person) {
+            return `<tr data-id="${person.id}">
+                <td>${person.firstName}</td>
+                <td>${person.lastName}</td>
+                <td>${person.phone}</td>
+                <td>
+                    <a href="#" class="delete">&#10006;</a>
+                    <a href="#" class="edit">&#9998;</a>
+                </td>
+            </tr>`;
+        });
+    
+        document.querySelector('#agenda tbody').innerHTML = list.join('');
+    },
 
-}
+    save: function() {
+        var firstName = document.querySelector('[name=firstName]').value;
+        var lastName = document.querySelector('[name=lastName]').value;
+        var phone = document.querySelector('[name=phone]').value;
+        
+        if (editPersonId) {
+            submitEditPerson(editPersonId, firstName, lastName, phone);
+        } else {
+            submitNewPerson(firstName, lastName, phone);
+        }
+    }, 
 
-function savePerson() {
-    var firstName = document.querySelector('[name=firstName]').value; //getting the value out of the input
-    var lastName = document.querySelector('[name=lastName]').value;
-    var phone = document.querySelector('[name=phone]').value;
+    inlineAdd: function (id, firstName, lastName, phone) {
+        this.list.push({
+            id,
+            firstName,
+            lastName,
+            phone
+        });
+        this.display(this.list);
+    },
 
-    if (editPersonId) {
-        submitEditPerson(editPersonId, firstName, lastName, phone); 
-    } else {
-        submitNewPerson(firstName, lastName, phone);
+    inlineDelete: function(id) {
+        this.list = this.list.filter(function(element) {
+            return element.id != id;
+        });
+        this.display(this.list);
+    },
+
+    search: function(value) {
+        value = value.toLowerCase().trim();
+        const filtered = this.list.filter(person => {
+            return person.firstName.toLowerCase().includes(value) || 
+                person.lastName.toLowerCase().includes(value) ||
+                person.phone.toLowerCase().includes(value)
+        });
+        this.display(filtered);
     }
-}
+};
+
+fetch(API_URL.READ).then(function(r){
+    return r.json();
+}).then(function(persons) {
+    Persons.list = persons;
+    Persons.display(persons);
+});
 
 function submitNewPerson(firstName, lastName, phone) {
-
     var body = null;
     const method = API_METHOD.ADD;
     if (method === 'POST') {
-        //fetch(API_URL.ADD, {
-        //method: API_METHOD.ADD,can't send info directly with get
         body = JSON.stringify({
             firstName,
             lastName,
@@ -73,13 +99,13 @@ function submitNewPerson(firstName, lastName, phone) {
         headers: {
             "Content-Type": "application/json"
         }
-    }).then(function (r) {
+    }).then(function(r) {
         return r.json();
-    }).then(function (status) {
+    }).then(function(status) {
         if (status.success) {
-            inlineAddPerson(status.id, firstName, lastName, phone);
+            Persons.inlineAdd(status.id, firstName, lastName, phone);
         } else {
-            console.warn('not saved', status);
+            console.warn('not saved!', status);
         }
     })
 }
@@ -101,38 +127,28 @@ function submitEditPerson(id, firstName, lastName, phone) {
         headers: {
             "Content-Type": "application/json"
         }
-    }).then(function (r) {
+    }).then(function(r) {
         return r.json();
-    }).then(function (status) {
+    }).then(function(status) {
         if (status.success) {
             inlineEditPerson(id, firstName, lastName, phone);
         } else {
-            console.warn('not saved', status);
+            console.warn('not saved!', status);
         }
     })
-}
-    
-function inlineAddPerson(id, firstName, lastName, phone) {
-    allPersons.push({
-        id,
-        firstName,
-        lastName,
-        phone
-    });
-    display(allPersons);
 }
 
 function inlineEditPerson(id, firstName, lastName, phone) {
     //window.location.reload();
     
-    const person = allPersons.find((p) => {
+    const person = Persons.list.find((p) => {
         return p.id == id;
     });
     person.firstName = firstName;
     person.lastName = lastName;
     person.phone = phone;
     
-    display(allPersons);
+    Persons.display(Persons.list);
 
     editPersonId = '';
     document.querySelector('[name=firstName]').value = '';
@@ -140,18 +156,10 @@ function inlineEditPerson(id, firstName, lastName, phone) {
     document.querySelector('[name=phone]').value = '';
 }
 
-function inlineDeletePerson(id) {
-    console.warn('please refresh :', id);
-    allPersons = allPersons.filter(function(person) {
-        return person.id != id;
-    });
-    display(allPersons);
-}
-
 function deletePerson(id) {
     var body = null;
     if (API_METHOD.DELETE === 'DELETE') {
-        body = JSON.stringify({id});
+        body = JSON.stringify({ id });
     }
     fetch(API_URL.DELETE, {
         method: API_METHOD.DELETE,
@@ -159,20 +167,20 @@ function deletePerson(id) {
         headers: {
             "Content-Type": "application/json"
         }
-    }).then(function (r) {
+    }).then(function(r) {
         return r.json();
-    }).then(function (status) {
+    }).then(function(status) {
         if (status.success) {
-            inlineDeletePerson(id);
+            Persons.inlineDelete(id);
         } else {
-            console.warn('not removed', status);
+            console.warn('not removed!', status);
         }
-    });
+    })
 }
 
 const editPerson = function(id) {
-    var person = allPersons.find(function(p) {
-        return p.id == id;
+    var person = Persons.list.find(function(p) {
+        return p.id == id
     });
     document.querySelector('[name=firstName]').value = person.firstName;
     document.querySelector('[name=lastName]').value = person.lastName;
@@ -180,33 +188,23 @@ const editPerson = function(id) {
     editPersonId = id;
 }
 
-const search = value => {
-    value = value.toLowerCase();
-    const filtered = allPersons.filter(person => {
-        return person.firstName.toLowerCase().includes(value) || 
-        person.lastName.toLowerCase().includes(value) || 
-        person.phone.includes(value);
-    });
-    display(filtered);
-};
-
 function initEvents() {
     const tbody = document.querySelector('#agenda tbody');
     tbody.addEventListener('click', function(e) {
         if (e.target.className == 'delete') {
-            const tr = e.target.parentNode.parentNode; //pentru a gasi tr-ul la care apartine x-ul
+            const tr = e.target.parentNode.parentNode;
             const id = tr.getAttribute('data-id');
-            console.warn('parent', id); 
             deletePerson(id);
         } else if (e.target.className == 'edit') {
-            const tr = e.target.parentNode.parentNode; 
+            const tr = e.target.parentNode.parentNode;
             const id = tr.getAttribute('data-id');
             editPerson(id);
         }
     });
+
     const searchInput = document.getElementById('search');
     searchInput.addEventListener('input', (e) => {
-        search(e.target.value);
+        Persons.search(e.target.value);
     })
 }
 
